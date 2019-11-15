@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">ASTest</string>
+    <string name="search_from">Откуда вылет</string>
+    <string name="search_to">Куда лететь</string>
+    <string name="search_flight">Найти билеты</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="no_internet_connection">Интернет соединение отсутствует</string>
+
+
+
+</resources>
