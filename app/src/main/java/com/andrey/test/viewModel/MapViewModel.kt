@@ -9,11 +9,16 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.graphics.Color
+import android.icu.text.CollationKey
 import android.os.Handler
 import android.view.animation.LinearInterpolator
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.*
+import com.google.maps.android.SphericalUtil
+import com.google.android.gms.maps.model.LatLngBounds
+
+
 
 
 class MapViewModel : ViewModel() {
@@ -53,7 +58,7 @@ class MapViewModel : ViewModel() {
 
             calculateCustomPolyLinesPath()
             var i = 0
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startPoint, 4f))
+            mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(getCameraBounds(), 10))
 
             handler = Handler()
             handler.postDelayed(object : Runnable {
@@ -70,6 +75,13 @@ class MapViewModel : ViewModel() {
             }, ANIMATION_DELAY)
         }
 
+    }
+
+    private fun getCameraBounds(): LatLngBounds{
+        val builder = LatLngBounds.Builder()
+        builder.include(startPoint)
+        builder.include(endPoint)
+        return builder.build()
     }
 
 
@@ -120,7 +132,6 @@ class MapViewModel : ViewModel() {
 
         if (marker != null) {
             val pathCalculation = PathCalculation()
-
             val latLngInterpolator = PathCalculation.LatLngInterpolatorNew.LinearFixed()
 
             val valueAnimator = ValueAnimator.ofFloat(0.0f, 1.0f)
