@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
+import android.view.WindowManager
 import android.view.animation.AnimationUtils
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
@@ -90,6 +91,7 @@ class MainActivity : AppCompatActivity() {
         autoCompleteCityFrom.setOnItemClickListener { _, _, p2, _ ->
             searchViewModel.saveChosenCityFrom(citiesAdapterFrom.getObject(p2) as City)
             hideKeyboard()
+            autoCompleteCityFrom.clearFocus()
         }
     }
 
@@ -98,6 +100,7 @@ class MainActivity : AppCompatActivity() {
         autoCompleteCityTo.setOnItemClickListener { _, _, p2, _ ->
             searchViewModel.saveChosenCityTo(citiesAdapterTo.getObject(p2) as City)
             hideKeyboard()
+            autoCompleteCityTo.clearFocus()
         }
     }
 
