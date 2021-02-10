@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/routes"
+    app:startDestination="@id/searchFragment">
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="com.andrey.test.presentation.searchScreen.SearchFragment"
+        android:label="SearchFragment">
+        <action
+            android:id="@+id/action_searchFragment_to_mapsActivity2"
+            app:destination="@id/mapsActivity" />
+    </fragment>
+    <activity
+        android:id="@+id/mapsActivity"
+        android:name="com.andrey.test.presentation.mapScreen.MapsActivity"
+        android:label="fragment_map"
+        tools:layout="@layout/fragment_map" />
+</navigation>

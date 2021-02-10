@@ -5,6 +5,8 @@
     <color name="colorAccent">#D81B60</color>
     <color name="colorGreen">#67C67A</color>
     <color name="colorLightGray">#99A09A</color>
+    <color name="yellowMarker">#E1FBE65C</color>
+    <color name="whiteMarkerStroke">#FFFFFF</color>
 
 
 </resources>
