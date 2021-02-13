@@ -49,7 +49,7 @@ inline fun <reified T : ViewModel> AppCompatActivity.obtainViewModel(): T =
         { Toothpick.openScope(Scope.APP).getInstance(ViewModelFactory::class.java) }
     ).value
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@ExperimentalCoroutinesApi
 fun EditText.textChanges(): Flow<CharSequence?> {
     return callbackFlow<CharSequence?> {
         val listener = object : TextWatcher {

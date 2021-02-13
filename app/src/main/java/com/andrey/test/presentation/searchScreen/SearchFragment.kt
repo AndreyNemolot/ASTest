@@ -2,31 +2,35 @@ package com.andrey.test.presentation.searchScreen
 
 import android.app.Activity
 import android.os.Bundle
+import android.os.Parcelable
 import android.view.View
 import android.view.animation.AnimationUtils
 import android.view.inputmethod.InputMethodManager
-import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavController
-import androidx.navigation.fragment.NavHostFragment
 import com.andrey.test.R
 import com.andrey.test.databinding.FragmentSearchBinding
+import com.andrey.test.di.Scope
 import com.andrey.test.domain.model.Direction
-import com.andrey.test.presentation.mapScreen.MapFragment.Companion.CITY_FROM_KEY
-import com.andrey.test.presentation.mapScreen.MapFragment.Companion.CITY_TO_KEY
+import com.andrey.test.presentation.mapScreen.MapFragment
 import com.andrey.test.presentation.observeOn
 import com.andrey.test.presentation.obtainViewModel
+import com.andrey.test.presentation.router.AppRouter
 import com.andrey.test.presentation.showMessage
 import com.andrey.test.presentation.textChanges
+import kotlinx.android.parcel.Parcelize
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import ru.terrakok.cicerone.android.support.SupportAppScreen
+import toothpick.Toothpick
+import javax.inject.Inject
 
 
-@OptIn(FlowPreview::class)
+@OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 class SearchFragment : Fragment(R.layout.fragment_search) {
 
     private var citiesAdapterFrom: AutoSuggestAdapter? = null
@@ -34,13 +38,20 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
 
     private lateinit var viewModel: SearchViewModel
     private lateinit var binding: FragmentSearchBinding
-    private lateinit var navController: NavController
+
+    @Inject
+    lateinit var router: AppRouter
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        val presentationScope = Toothpick.openScopes(Scope.PRESENTATION)
+        Toothpick.inject(this, presentationScope)
+        super.onCreate(savedInstanceState)
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding = FragmentSearchBinding.bind(view)
         viewModel = obtainViewModel()
-        navController = NavHostFragment.findNavController(this)
         citiesAdapterFrom = AutoSuggestAdapter(
             requireContext(),
             android.R.layout.simple_dropdown_item_1line
@@ -71,15 +82,15 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         binding.autoCompleteCityFrom.textChanges()
             .filterNot { it.isNullOrBlank() }
             .debounce(DEBOUNCE_INPUT_TEXT)
-            .onEach {
-                viewModel.sendQuery(it.toString(), Direction.FROM)
+            .onEach { text ->
+                viewModel.sendQuery(text.toString(), Direction.FROM)
             }.launchIn(lifecycleScope)
 
         binding.autoCompleteCityTo.textChanges()
             .filterNot { it.isNullOrBlank() }
             .debounce(DEBOUNCE_INPUT_TEXT)
-            .onEach {
-                viewModel.sendQuery(it.toString(), Direction.TO)
+            .onEach { text ->
+                viewModel.sendQuery(text.toString(), Direction.TO)
             }.launchIn(lifecycleScope)
 
         viewModel.stateFlow.observeOn(viewLifecycleOwner) {
@@ -116,11 +127,7 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                 showMessage(getString(R.string.missing_city, command.cityName))
             }
             is Command.OnSearchFlight -> {
-                val bundle = bundleOf(
-                    CITY_FROM_KEY to command.cityFrom,
-                    CITY_TO_KEY to command.cityTo
-                )
-                navController.navigate(R.id.mapFragment, bundle)
+                router.navigateTo(MapFragment.Screen(command.cityFrom, command.cityTo))
             }
         }
     }
@@ -180,6 +187,13 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
 
     companion object {
         private const val DEBOUNCE_INPUT_TEXT = 350L
+    }
+
+    @Parcelize
+    class Screen : SupportAppScreen(), Parcelable {
+        override fun getFragment(): Fragment {
+            return SearchFragment()
+        }
     }
 
 }

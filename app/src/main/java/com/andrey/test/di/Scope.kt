@@ -1,9 +1,6 @@
 package com.andrey.test.di
 
 object Scope {
-    val APP = "APP"
-    val ACTIVITY = "ACTIVITY"
-    val FRAGMENT = "FRAGMENT"
-    val DATA = "DATA"
-
+    const val APP = "APP"
+    const val PRESENTATION = "PRESENTATION"
 }

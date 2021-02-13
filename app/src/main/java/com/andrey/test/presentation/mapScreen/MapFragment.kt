@@ -2,7 +2,9 @@ package com.andrey.test.presentation.mapScreen
 
 import android.graphics.Color
 import android.os.Bundle
+import android.os.Parcelable
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.andrey.test.R
 import com.andrey.test.domain.MarkerAnimator
@@ -15,6 +17,8 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.maps.android.ui.IconGenerator
+import kotlinx.android.parcel.Parcelize
+import ru.terrakok.cicerone.android.support.SupportAppScreen
 
 class MapFragment : SupportMapFragment(), OnMapReadyCallback, MarkerAnimator.AnimationCallback {
 
@@ -117,20 +121,37 @@ class MapFragment : SupportMapFragment(), OnMapReadyCallback, MarkerAnimator.Ani
         return googleMap.addMarker(markerOption)
     }
 
-    companion object {
-        private const val MARKER_ANCHOR = 0.5f
-        private const val POLYLINE_WIDTH = 20.0f
-        private const val POLYLINE_GAP = 20f
-        const val CITY_FROM_KEY = "cityFrom"
-        const val CITY_TO_KEY = "cityTo"
-    }
-
     override fun onLoadingEnded() {
         // use for end of loading action
     }
 
     override fun lastPosition(position: LatLng) {
         viewModel.saveLastPosition(position)
+    }
+
+    companion object {
+        private const val MARKER_ANCHOR = 0.5f
+        private const val POLYLINE_WIDTH = 20.0f
+        private const val POLYLINE_GAP = 20f
+        const val CITY_FROM_KEY = "cityFrom"
+        const val CITY_TO_KEY = "cityTo"
+
+        @JvmStatic
+        fun newInstance(cityFrom: City, cityTo: City) =
+            MapFragment().apply {
+                arguments = Bundle().apply {
+                    putParcelable(CITY_FROM_KEY, cityFrom)
+                    putParcelable(CITY_TO_KEY, cityTo)
+                }
+            }
+    }
+
+    @Parcelize
+    class Screen(private val cityFrom: City, private val cityTo: City) : SupportAppScreen(),
+        Parcelable {
+        override fun getFragment(): Fragment {
+            return newInstance(cityFrom, cityTo)
+        }
     }
 
 }
