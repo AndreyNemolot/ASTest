@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.View
 import android.view.animation.AnimationUtils
 import android.view.inputmethod.InputMethodManager
-import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -13,11 +12,12 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.andrey.test.R
 import com.andrey.test.databinding.FragmentSearchBinding
-import com.andrey.test.presentation.mapScreen.MapsActivity.Companion.CITY_FROM_KEY
-import com.andrey.test.presentation.mapScreen.MapsActivity.Companion.CITY_TO_KEY
+import com.andrey.test.domain.model.Direction
+import com.andrey.test.presentation.mapScreen.MapFragment.Companion.CITY_FROM_KEY
+import com.andrey.test.presentation.mapScreen.MapFragment.Companion.CITY_TO_KEY
 import com.andrey.test.presentation.observeOn
 import com.andrey.test.presentation.obtainViewModel
-import com.andrey.test.presentation.searchScreen.adapter.AutoSuggestAdapter
+import com.andrey.test.presentation.showMessage
 import com.andrey.test.presentation.textChanges
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
@@ -25,8 +25,6 @@ import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
 
 @OptIn(FlowPreview::class)
 class SearchFragment : Fragment(R.layout.fragment_search) {
@@ -68,21 +66,20 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
             binding.autoCompleteCityFrom.text = binding.autoCompleteCityTo.text.also {
                 binding.autoCompleteCityTo.text = binding.autoCompleteCityFrom.text
             }
-
         }
-
-        binding.autoCompleteCityTo.textChanges()
-            .filterNot { it.isNullOrBlank() }
-            .debounce(DEBOUNCE_INPUT_TEXT)
-            .onEach {
-                viewModel.sendQuery(it.toString())
-            }.launchIn(lifecycleScope)
 
         binding.autoCompleteCityFrom.textChanges()
             .filterNot { it.isNullOrBlank() }
             .debounce(DEBOUNCE_INPUT_TEXT)
             .onEach {
-                viewModel.sendQuery(it.toString())
+                viewModel.sendQuery(it.toString(), Direction.FROM)
+            }.launchIn(lifecycleScope)
+
+        binding.autoCompleteCityTo.textChanges()
+            .filterNot { it.isNullOrBlank() }
+            .debounce(DEBOUNCE_INPUT_TEXT)
+            .onEach {
+                viewModel.sendQuery(it.toString(), Direction.TO)
             }.launchIn(lifecycleScope)
 
         viewModel.stateFlow.observeOn(viewLifecycleOwner) {
@@ -102,13 +99,12 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
 
         autoSuggestClickHandlerFrom()
         autoSuggestClickHandlerTo()
-
     }
 
     private fun handleCommand(command: Command) {
         when (command) {
-            is Command.OnInternetAvailable -> {
-                showConnectionState(command.isNetworkAvailable)
+            is Command.OnInternetUnailable -> {
+                showMessage(getString(R.string.internet_unavailable))
             }
             is Command.OnShowError -> {
                 showMessage(getString(R.string.some_error))
@@ -124,27 +120,22 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                     CITY_FROM_KEY to command.cityFrom,
                     CITY_TO_KEY to command.cityTo
                 )
-                navController.navigate(R.id.mapsActivity, bundle)
+                navController.navigate(R.id.mapFragment, bundle)
             }
         }
     }
 
     private fun updateState(state: State) {
         val isFromFieldFocused = binding.autoCompleteCityFrom.isCursorVisible
-        val isToFieldFocused = binding.autoCompleteCityFrom.isCursorVisible
-        val cityList = state.cityList
+        val isToFieldFocused = binding.autoCompleteCityTo.isCursorVisible
+        showConnectionState(state.isNetworkAvailable)
 
-        if (cityList.isNotEmpty()) {
-            if (isFromFieldFocused) {
-                citiesAdapterFrom?.setData(cityList)
-                citiesAdapterFrom?.notifyDataSetChanged()
-            }
-            if (isToFieldFocused) {
-                citiesAdapterTo?.setData(cityList)
-                citiesAdapterTo?.notifyDataSetChanged()
-            }
+        if (isFromFieldFocused) {
+            citiesAdapterFrom?.setData(state.cityListFrom)
         }
-
+        if (isToFieldFocused) {
+            citiesAdapterTo?.setData(state.cityListTo)
+        }
     }
 
     private fun showConnectionState(isAvailable: Boolean) {
@@ -167,17 +158,12 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
 
     private fun autoSuggestClickHandlerTo() {
         binding.autoCompleteCityTo.setOnItemClickListener { _, _, index, _ ->
-            citiesAdapterFrom?.getItem(index)?.let { city ->
+            citiesAdapterTo?.getItem(index)?.let { city ->
                 viewModel.saveChosenCityTo(city)
                 hideKeyboard()
-                binding.autoCompleteCityFrom.clearFocus()
+                binding.autoCompleteCityTo.clearFocus()
             }
         }
-    }
-
-
-    private fun showMessage(errorText: String) {
-        Toast.makeText(requireContext(), errorText, Toast.LENGTH_SHORT).show()
     }
 
     private fun hideKeyboard() {
@@ -193,18 +179,7 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
     }
 
     companion object {
-
-        const val DEBOUNCE_INPUT_TEXT = 400L
-
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            SearchFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
+        private const val DEBOUNCE_INPUT_TEXT = 350L
     }
-
 
 }

@@ -2,7 +2,6 @@ package com.andrey.test.presentation.mapScreen
 
 import android.graphics.Color
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.andrey.test.R
@@ -17,32 +16,27 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.maps.android.ui.IconGenerator
 
+class MapFragment : SupportMapFragment(), OnMapReadyCallback, MarkerAnimator.AnimationCallback {
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
-
-    lateinit var viewModel: MapViewModel
     lateinit var googleMap: GoogleMap
+    lateinit var viewModel: MapViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_maps)
         viewModel = obtainViewModel()
-
-        val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment
-
-        mapFragment.getMapAsync(this)
-
         viewModel.commandFlow.observeOn(lifecycleScope) {
             handleCommand(it)
         }
+        getMapAsync(this)
     }
 
-    override fun onMapReady(googleMap: GoogleMap) {
-        this.googleMap = googleMap
-        val cityFrom = requireNotNull(intent.getParcelableExtra<City>(CITY_FROM_KEY))
-        val cityTo = requireNotNull(intent.getParcelableExtra<City>(CITY_TO_KEY))
-        viewModel.saveCityAndStart(cityFrom, cityTo)
+    override fun onMapReady(map: GoogleMap) {
+        googleMap = map
+        arguments?.let {
+            val cityFrom = requireNotNull(it.getParcelable<City>(CITY_FROM_KEY))
+            val cityTo = requireNotNull(it.getParcelable<City>(CITY_TO_KEY))
+            viewModel.startLoading(cityFrom, cityTo)
+        }
     }
 
     private fun handleCommand(command: Command) {
@@ -50,7 +44,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             is Command.OnStartAnimation -> {
                 prepareLoading(command.cityFrom, command.cityTo)
                 loading(
-                    command.startPoint ?: command.cityFrom.location,
+                    command.lastPosition ?: command.cityFrom.location,
                     command.cityTo.location,
                     command.duration
                 )
@@ -67,22 +61,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun loading(startPosition: LatLng, endPosition: LatLng, duration: Long) {
         val airplaneMarker = drawAirplaneMarker(startPosition)
-        MarkerAnimator.animateMarker(
+        MarkerAnimator(
             airplaneMarker,
+            startPosition,
             endPosition,
-            duration
-        ) { lastPoint, spentTime ->
-            viewModel.saveCurrentMarkerLocation(lastPoint, spentTime)
-        }
+            duration,
+            this
+        ).animateMarker()
     }
 
-
     private fun drawCityNameMarker(city: City) {
-        val icg = IconGenerator(this)
+        val icg = IconGenerator(requireContext())
         val bm = icg.apply {
-            setBackground(ContextCompat.getDrawable(baseContext, R.drawable.badge_marker))
+            setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.badge_marker))
             setTextAppearance(R.style.text_white_18)
-        }.makeIcon(city.latinCityName)
+        }.makeIcon(city.markerName)
         googleMap.addMarker(
             MarkerOptions().position(
                 LatLng(
@@ -106,11 +99,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun drawTravelPath(cityFromLatLng: LatLng, cityToLatLng: LatLng) {
-        val pattern: List<PatternItem> = listOf(Dot(), Gap(20f))
+        val pattern: List<PatternItem> = listOf(Dot(), Gap(POLYLINE_GAP))
         val polyLine = PolylineOptions()
             .addAll(listOf(cityFromLatLng, cityToLatLng))
             .color(Color.GRAY)
-            .width(20.0f)
+            .width(POLYLINE_WIDTH)
             .pattern(pattern)
             .geodesic(true)
         googleMap.addPolyline(polyLine)
@@ -120,13 +113,24 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val markerOption = MarkerOptions()
             .position(location)
             .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_plane))
-            .anchor(0.5f, 0.5f)
+            .anchor(MARKER_ANCHOR, MARKER_ANCHOR)
         return googleMap.addMarker(markerOption)
     }
 
     companion object {
+        private const val MARKER_ANCHOR = 0.5f
+        private const val POLYLINE_WIDTH = 20.0f
+        private const val POLYLINE_GAP = 20f
         const val CITY_FROM_KEY = "cityFrom"
         const val CITY_TO_KEY = "cityTo"
+    }
+
+    override fun onLoadingEnded() {
+        // use for end of loading action
+    }
+
+    override fun lastPosition(position: LatLng) {
+        viewModel.saveLastPosition(position)
     }
 
 }

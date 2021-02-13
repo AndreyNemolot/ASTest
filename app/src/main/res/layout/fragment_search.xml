@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:gravity="center_vertical"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_vertical"
     android:orientation="vertical">
-
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:layout_marginStart="@dimen/editTextDefaultMargin"
         android:layout_marginEnd="@dimen/editTextDefaultMargin"
-        android:layout_gravity="center"
         android:orientation="vertical">
 
         <TextView
@@ -24,7 +24,6 @@
             android:id="@+id/autoCompleteCityFrom"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Москва"
             android:inputType="textPersonName"
             android:maxLines="1" />
     </LinearLayout>
@@ -33,16 +32,16 @@
         android:id="@+id/changeDirections"
         android:layout_width="30dp"
         android:layout_height="30dp"
-        android:layout_marginTop="20dp"
         android:layout_gravity="center_horizontal"
+        android:layout_marginTop="20dp"
         android:background="@drawable/baseline_sync_alt_black_18" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:layout_marginStart="@dimen/editTextDefaultMargin"
         android:layout_marginEnd="@dimen/editTextDefaultMargin"
-        android:layout_gravity="center"
         android:orientation="vertical">
 
         <TextView
@@ -55,12 +54,10 @@
             android:id="@+id/autoCompleteCityTo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Лондон"
             android:inputType="textPersonName"
             android:maxLines="1" />
 
     </LinearLayout>
-
 
     <Button
         android:id="@+id/searchFlight"
@@ -68,31 +65,19 @@
         android:layout_height="wrap_content"
         android:layout_gravity="end"
         android:layout_margin="@dimen/editTextDefaultMargin"
-        android:padding="5dp"
         android:background="@color/colorGreen"
+        android:padding="5dp"
         android:text="@string/search_flight"
         android:textAppearance="@style/text_white_18" />
 
-    <LinearLayout
+    <TextView
         android:id="@+id/internetStateMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:layout_marginTop="30dp"
+        android:text="@string/no_internet_connection"
         android:visibility="gone"
-        android:gravity="center_horizontal"
-        android:layout_gravity="center_horizontal"
-        android:orientation="vertical">
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/baseline_signal_wifi_off_black_18" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/no_internet_connection" />
-
-    </LinearLayout>
+        app:drawableTopCompat="@drawable/baseline_signal_wifi_off_black_18" />
 
 </LinearLayout>

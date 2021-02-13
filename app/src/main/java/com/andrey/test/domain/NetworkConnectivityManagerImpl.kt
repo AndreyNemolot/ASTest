@@ -6,14 +6,20 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.ConnectivityManager
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.OnLifecycleEvent
+import com.andrey.test.di.modules.AppModules.Companion.PROCESS_LIFECYCLE
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
+import javax.inject.Named
 
 class NetworkConnectivityManagerImpl @Inject constructor(
-    application: Application
-) : NetworkConnectivityManager {
+    private val application: Application,
+    @Named(PROCESS_LIFECYCLE) private val lifecycle: Lifecycle,
+) : NetworkConnectivityManager, LifecycleObserver {
     private val networkChangeReceiver: BroadcastReceiver
     private var isReceiverRegistered = false
 
@@ -23,12 +29,13 @@ class NetworkConnectivityManagerImpl @Inject constructor(
         return _stateFlow.asStateFlow()
     }
 
-    override fun get(): Boolean {
+    override fun getLast(): Boolean {
         return _stateFlow.value
     }
 
     init {
-        this.networkChangeReceiver = object : BroadcastReceiver() {
+        lifecycle.addObserver(this)
+        networkChangeReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 val networkState =
                     getConnectivityStatus(
@@ -37,45 +44,54 @@ class NetworkConnectivityManagerImpl @Inject constructor(
                 _stateFlow.tryEmit(networkState != TYPE_NOT_CONNECTED)
             }
         }
-        registerReceiver(application)
+    }
 
+    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
+    private fun stop() {
+        unregisterReceiver(application)
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_START)
+    private fun start() {
+        registerReceiver(application)
     }
 
     private fun registerReceiver(context: Context) {
         if (!isReceiverRegistered) {
             context.registerReceiver(
                 networkChangeReceiver,
-                IntentFilter("android.net.conn.CONNECTIVITY_CHANGE")
+                IntentFilter(INTENT_FILTER_CONNECTIVITY)
             )
             isReceiverRegistered = true
         }
     }
 
-    override fun unregister(context: Context) {
+    private fun unregisterReceiver(context: Context) {
         if (isReceiverRegistered) {
             context.unregisterReceiver(networkChangeReceiver)
             isReceiverRegistered = false
         }
     }
 
+    private fun getConnectivityStatus(context: Context): Int {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        val activeNetwork = cm.activeNetworkInfo
+        if (null != activeNetwork) {
+            if (activeNetwork.type == ConnectivityManager.TYPE_WIFI)
+                return TYPE_WIFI
+
+            if (activeNetwork.type == ConnectivityManager.TYPE_MOBILE)
+                return TYPE_MOBILE
+        }
+
+        return TYPE_NOT_CONNECTED
+    }
+
     companion object {
         private const val TYPE_WIFI = 1
         private const val TYPE_MOBILE = 2
         private const val TYPE_NOT_CONNECTED = 0
-
-        fun getConnectivityStatus(context: Context): Int {
-            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
-            val activeNetwork = cm.activeNetworkInfo
-            if (null != activeNetwork) {
-                if (activeNetwork.type == ConnectivityManager.TYPE_WIFI)
-                    return TYPE_WIFI
-
-                if (activeNetwork.type == ConnectivityManager.TYPE_MOBILE)
-                    return TYPE_MOBILE
-            }
-
-            return TYPE_NOT_CONNECTED
-        }
+        private const val INTENT_FILTER_CONNECTIVITY = "android.net.conn.CONNECTIVITY_CHANGE"
     }
 }

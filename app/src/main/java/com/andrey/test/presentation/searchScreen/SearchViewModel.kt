@@ -4,43 +4,55 @@ import androidx.lifecycle.*
 import com.andrey.test.domain.CityInteractor
 import com.andrey.test.domain.NetworkConnectivityManager
 import com.andrey.test.domain.model.City
+import com.andrey.test.domain.model.Direction
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.io.IOException
 import javax.inject.Inject
 
 class SearchViewModel @Inject constructor(
     private val cityInteractor: CityInteractor,
-    private val networkManager: NetworkConnectivityManager
+    networkManager: NetworkConnectivityManager
 ) : ViewModel() {
 
+    private var job: Job? = null
     private var state: State = State()
     private val _stateFlow = MutableStateFlow(State())
     internal val stateFlow = _stateFlow.asStateFlow()
     private val _commandFlow = MutableSharedFlow<Command>()
     internal val commandFlow = _commandFlow.asSharedFlow()
 
-    private var job: Job? = null
-
     init {
-        networkManager.observe().onEach {
-            _commandFlow.emit(Command.OnInternetAvailable(it))
+        networkManager.observe().onEach { isNetworkAvailable ->
+            updateViewState { state.copy(isNetworkAvailable = isNetworkAvailable) }
         }.launchIn(viewModelScope)
     }
 
-    fun sendQuery(query: String) {
+    fun sendQuery(query: String, direction: Direction) {
         job?.cancel()
         job = viewModelScope.launch {
-            getCityList(query)
+            getCityList(query, direction)
         }
     }
 
-    private suspend fun getCityList(searchString: String) {
-        if (!networkManager.get()) return
+    private suspend fun getCityList(searchString: String, direction: Direction) {
+        if (!state.isNetworkAvailable) {
+            _commandFlow.emit(Command.OnInternetUnailable)
+            return
+        }
         try {
             val cityList = cityInteractor.getCityList(searchString, LANG)
             updateViewState {
-                state.copy(cityList = cityList)
+                when (direction) {
+                    Direction.FROM -> {
+                        state.copy(cityListFrom = cityList)
+                    }
+                    Direction.TO -> {
+                        state.copy(cityListTo = cityList)
+
+                    }
+                }
             }
         } catch (e: Exception) {
             _commandFlow.emit(Command.OnShowError)
@@ -69,17 +81,16 @@ class SearchViewModel @Inject constructor(
             }
 
             if (inputedCityFrom != state.cityFrom?.latinCityName) {
-                val city = cityInteractor.getFirstSuitableCity(inputedCityFrom, LANG)
+                val city = getCity(inputedCityFrom)
                 if (city != null) {
                     state = state.copy(cityFrom = city)
                 } else {
                     _commandFlow.emit(Command.OnShowMissingCityMessage(inputedCityFrom))
                     return@launch
-
                 }
             }
             if (inputedCityTo != state.cityTo?.latinCityName) {
-                val city = cityInteractor.getFirstSuitableCity(inputedCityTo, LANG)
+                val city = getCity(inputedCityTo)
                 if (city != null) {
                     state = state.copy(cityTo = city)
                 } else {
@@ -97,12 +108,23 @@ class SearchViewModel @Inject constructor(
         }
     }
 
+    private suspend fun getCity(cityName: String): City? {
+        return try {
+            cityInteractor.getFirstSuitableCity(cityName, LANG)
+        } catch (e: Exception) {
+            if (e is IOException) {
+                _commandFlow.emit(Command.OnInternetUnailable)
+            }
+            null
+        }
+    }
+
     fun changeDirection() {
         state = state.copy(cityFrom = state.cityTo, cityTo = state.cityFrom)
     }
 
     companion object {
-        const val LANG = "ru"
+        private const val LANG = "ru"
     }
 
 }

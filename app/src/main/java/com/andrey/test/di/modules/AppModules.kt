@@ -1,6 +1,8 @@
 package com.andrey.test.di.modules
 
 import android.app.Application
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ProcessLifecycleOwner
 import com.andrey.test.data.network.HttpClientProvider
 import com.andrey.test.data.network.Network
 import com.andrey.test.data.network.NetworkImpl
@@ -26,6 +28,11 @@ class AppModules(application: Application) : Module() {
         bind(CityRepository::class.java).to(CityRepositoryImpl::class.java).toString()
         bind(CityInteractor::class.java).to(CityInteractorImpl::class.java).toString()
         bind(NetworkConnectivityManager::class.java).to(NetworkConnectivityManagerImpl::class.java)
-            .toString()
+        bind<Lifecycle>().withName(PROCESS_LIFECYCLE)
+            .toInstance(ProcessLifecycleOwner.get().lifecycle)
+    }
+
+    companion object {
+        const val PROCESS_LIFECYCLE = "processLifecycle"
     }
 }

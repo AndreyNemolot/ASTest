@@ -7,7 +7,8 @@ import kotlinx.android.parcel.Parcelize
 data class CityEntity(
     val latinFullName: String? = null,
     val location: Location? = null,
-    val latinCity: String? = null
+    val latinCity: String? = null,
+    val iata: List<String>? = null
 ) : Parcelable {
 
     @Parcelize

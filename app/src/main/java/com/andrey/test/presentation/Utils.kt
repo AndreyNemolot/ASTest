@@ -5,6 +5,7 @@ import android.text.TextWatcher
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
@@ -76,3 +77,6 @@ inline var TextView.textOrGone: CharSequence?
         }
     }
 
+fun Fragment.showMessage(errorText: String) {
+    Toast.makeText(requireContext(), errorText, Toast.LENGTH_SHORT).show()
+}

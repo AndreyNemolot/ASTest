@@ -2,8 +2,8 @@ package com.andrey.test.presentation.searchScreen
 
 import com.andrey.test.domain.model.City
 
-sealed class Command {
-    class OnInternetAvailable(val isNetworkAvailable: Boolean) : Command()
+internal sealed class Command {
+    object OnInternetUnailable : Command()
     object OnShowError : Command()
     object OnShowInputCitiesMessage : Command()
     class OnShowMissingCityMessage(val cityName: String) : Command()

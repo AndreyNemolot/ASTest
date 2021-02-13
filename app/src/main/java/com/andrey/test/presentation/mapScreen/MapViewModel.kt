@@ -13,31 +13,27 @@ class MapViewModel @Inject constructor() : ViewModel() {
 
     private val _commandFlow = MutableSharedFlow<Command>()
     internal val commandFlow = _commandFlow.asSharedFlow()
+    private var lastPosition: LatLng? = null
 
-    private var lastStartPoint: LatLng? = null
-    private var spentTime = 0L
-
-
-    fun saveCityAndStart(cityFrom: City, cityTo: City) {
+    fun startLoading(cityFrom: City, cityTo: City) {
         viewModelScope.launch {
             _commandFlow.emit(
                 Command.OnStartAnimation(
                     cityFrom,
                     cityTo,
-                    START_DURATION - spentTime,
-                    lastStartPoint
+                    DURATION,
+                    lastPosition
                 )
             )
         }
     }
 
-    fun saveCurrentMarkerLocation(currentLocation: LatLng, spentTime: Long) {
-        this.lastStartPoint = currentLocation
-        this.spentTime = spentTime
+    fun saveLastPosition(position: LatLng) {
+        lastPosition = position
     }
 
     companion object {
-        const val START_DURATION = 8000L
+        const val DURATION = 8000L
     }
 
 }

@@ -9,12 +9,19 @@
         android:name="com.andrey.test.presentation.searchScreen.SearchFragment"
         android:label="SearchFragment">
         <action
-            android:id="@+id/action_searchFragment_to_mapsActivity2"
-            app:destination="@id/mapsActivity" />
+            android:id="@+id/action_searchFragment_to_mapFragment2"
+            app:destination="@id/mapFragment" />
     </fragment>
-    <activity
-        android:id="@+id/mapsActivity"
-        android:name="com.andrey.test.presentation.mapScreen.MapsActivity"
+    <fragment
+        android:id="@+id/mapFragment"
+        android:name="com.andrey.test.presentation.mapScreen.MapFragment"
         android:label="fragment_map"
-        tools:layout="@layout/fragment_map" />
+        tools:layout="@layout/fragment_map">
+        <argument
+            android:name="cityFrom"
+            app:argType="com.andrey.test.domain.model.City" />
+        <argument
+            android:name="cityTo"
+            app:argType="com.andrey.test.domain.model.City" />
+    </fragment>
 </navigation>

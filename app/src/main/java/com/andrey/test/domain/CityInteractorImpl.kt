@@ -24,6 +24,7 @@ class CityInteractorImpl @Inject constructor(
             latinFullName = latinFullName,
             latinCityName = latinCity!!,
             location = LatLng(location?.lat!!, location.lon!!),
+            nearestAirport = iata?.firstOrNull()
         )
     }
 }

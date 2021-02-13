@@ -1,4 +1,4 @@
-package com.andrey.test.presentation.searchScreen.adapter
+package com.andrey.test.presentation.searchScreen
 
 import android.content.Context
 import android.view.LayoutInflater
@@ -21,8 +21,11 @@ class AutoSuggestAdapter(context: Context, private val resource: Int) :
     }
 
     fun setData(response: List<City>) {
-        dataList.clear()
-        dataList.addAll(response)
+        dataList.apply {
+            clear()
+            addAll(response)
+        }
+        notifyDataSetChanged()
     }
 
     override fun getCount(): Int {
