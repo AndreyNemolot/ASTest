@@ -125,8 +125,8 @@ class MapFragment : SupportMapFragment(), OnMapReadyCallback, MarkerAnimator.Ani
         // use for end of loading action
     }
 
-    override fun lastPosition(position: LatLng) {
-        viewModel.saveLastPosition(position)
+    override fun lastPosition(position: LatLng, spentTime: Long) {
+        viewModel.saveLastAnimationData(position, spentTime)
     }
 
     companion object {

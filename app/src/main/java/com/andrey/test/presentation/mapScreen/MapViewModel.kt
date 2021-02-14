@@ -14,6 +14,7 @@ class MapViewModel @Inject constructor() : ViewModel() {
     private val _commandFlow = MutableSharedFlow<Command>()
     internal val commandFlow = _commandFlow.asSharedFlow()
     private var lastPosition: LatLng? = null
+    private var spentTime: Long = 0
 
     fun startLoading(cityFrom: City, cityTo: City) {
         viewModelScope.launch {
@@ -21,15 +22,16 @@ class MapViewModel @Inject constructor() : ViewModel() {
                 Command.OnStartAnimation(
                     cityFrom,
                     cityTo,
-                    DURATION,
+                    DURATION - spentTime,
                     lastPosition
                 )
             )
         }
     }
 
-    fun saveLastPosition(position: LatLng) {
-        lastPosition = position
+    fun saveLastAnimationData(position: LatLng, spentTime: Long) {
+        this.lastPosition = position
+        this.spentTime = spentTime
     }
 
     companion object {

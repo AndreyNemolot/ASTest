@@ -21,7 +21,7 @@ class MarkerAnimator(
     fun animateMarker() {
         val sphericalInterpolator = LatLngInterpolator.Spherical()
         val property = Property.of(Marker::class.java, LatLng::class.java, PROPERTY_NAME)
-
+        val startAnimationTime = System.currentTimeMillis()
         val typeEvaluator: TypeEvaluator<LatLng> = TypeEvaluator { fraction, startValue, endValue ->
             val newPointPosition = sphericalInterpolator.interpolate(
                 fraction,
@@ -31,7 +31,8 @@ class MarkerAnimator(
             val angle = SphericalUtil.computeHeading(lastPosition, newPointPosition)
             lastPosition = newPointPosition
             marker.rotation = angle.toFloat()
-            callback?.lastPosition(lastPosition)
+            val currentTime = System.currentTimeMillis()
+            callback?.lastPosition(lastPosition, currentTime - startAnimationTime)
             newPointPosition
         }
 
@@ -45,7 +46,7 @@ class MarkerAnimator(
 
     interface AnimationCallback {
         fun onLoadingEnded()
-        fun lastPosition(position: LatLng)
+        fun lastPosition(position: LatLng, spentTime: Long)
     }
 
     companion object {
