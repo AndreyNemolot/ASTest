@@ -2,7 +2,7 @@ package com.andrey.test.presentation.mapScreen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.andrey.test.domain.model.City
+import com.andrey.test.presentation.model.CityViewModel
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -16,7 +16,7 @@ class MapViewModel @Inject constructor() : ViewModel() {
     private var lastPosition: LatLng? = null
     private var spentTime: Long = 0
 
-    fun startLoading(cityFrom: City, cityTo: City) {
+    fun startLoading(cityFrom: CityViewModel, cityTo: CityViewModel) {
         viewModelScope.launch {
             _commandFlow.emit(
                 Command.OnStartAnimation(

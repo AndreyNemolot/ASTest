@@ -7,8 +7,8 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.andrey.test.R
-import com.andrey.test.domain.MarkerAnimator
-import com.andrey.test.domain.model.City
+import com.andrey.test.presentation.animation.MarkerAnimator
+import com.andrey.test.presentation.model.CityViewModel
 import com.andrey.test.presentation.observeOn
 import com.andrey.test.presentation.obtainViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -37,8 +37,8 @@ class MapFragment : SupportMapFragment(), OnMapReadyCallback, MarkerAnimator.Ani
     override fun onMapReady(map: GoogleMap) {
         googleMap = map
         arguments?.let {
-            val cityFrom = requireNotNull(it.getParcelable<City>(CITY_FROM_KEY))
-            val cityTo = requireNotNull(it.getParcelable<City>(CITY_TO_KEY))
+            val cityFrom = requireNotNull(it.getParcelable<CityViewModel>(CITY_FROM_KEY))
+            val cityTo = requireNotNull(it.getParcelable<CityViewModel>(CITY_TO_KEY))
             viewModel.startLoading(cityFrom, cityTo)
         }
     }
@@ -56,7 +56,7 @@ class MapFragment : SupportMapFragment(), OnMapReadyCallback, MarkerAnimator.Ani
         }
     }
 
-    private fun prepareLoading(cityFrom: City, cityTo: City) {
+    private fun prepareLoading(cityFrom: CityViewModel, cityTo: CityViewModel) {
         drawCityNameMarker(cityFrom)
         drawCityNameMarker(cityTo)
         drawTravelPath(cityFrom.location, cityTo.location)
@@ -74,19 +74,14 @@ class MapFragment : SupportMapFragment(), OnMapReadyCallback, MarkerAnimator.Ani
         ).animateMarker()
     }
 
-    private fun drawCityNameMarker(city: City) {
+    private fun drawCityNameMarker(city: CityViewModel) {
         val icg = IconGenerator(requireContext())
         val bm = icg.apply {
             setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.badge_marker))
             setTextAppearance(R.style.text_white_18)
         }.makeIcon(city.markerName)
         googleMap.addMarker(
-            MarkerOptions().position(
-                LatLng(
-                    city.location.latitude,
-                    city.location.longitude
-                )
-            ).icon(BitmapDescriptorFactory.fromBitmap(bm))
+            MarkerOptions().position(city.location).icon(BitmapDescriptorFactory.fromBitmap(bm))
         )
     }
 
@@ -137,7 +132,7 @@ class MapFragment : SupportMapFragment(), OnMapReadyCallback, MarkerAnimator.Ani
         const val CITY_TO_KEY = "cityTo"
 
         @JvmStatic
-        fun newInstance(cityFrom: City, cityTo: City) =
+        fun newInstance(cityFrom: CityViewModel, cityTo: CityViewModel) =
             MapFragment().apply {
                 arguments = Bundle().apply {
                     putParcelable(CITY_FROM_KEY, cityFrom)
@@ -147,7 +142,8 @@ class MapFragment : SupportMapFragment(), OnMapReadyCallback, MarkerAnimator.Ani
     }
 
     @Parcelize
-    class Screen(private val cityFrom: City, private val cityTo: City) : SupportAppScreen(),
+    class Screen(private val cityFrom: CityViewModel, private val cityTo: CityViewModel) :
+        SupportAppScreen(),
         Parcelable {
         override fun getFragment(): Fragment {
             return newInstance(cityFrom, cityTo)

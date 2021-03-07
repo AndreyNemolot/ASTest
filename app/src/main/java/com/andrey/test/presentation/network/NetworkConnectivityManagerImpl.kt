@@ -1,4 +1,4 @@
-package com.andrey.test.domain
+package com.andrey.test.presentation.network
 
 import android.app.Application
 import android.content.BroadcastReceiver

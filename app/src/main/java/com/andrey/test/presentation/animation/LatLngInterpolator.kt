@@ -1,4 +1,4 @@
-package com.andrey.test.domain
+package com.andrey.test.presentation.animation
 
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.SphericalUtil

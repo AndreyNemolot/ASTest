@@ -10,17 +10,18 @@ import android.widget.Filterable
 import android.widget.TextView
 import androidx.annotation.Nullable
 import com.andrey.test.domain.model.City
+import com.andrey.test.presentation.model.CityViewModel
 import com.andrey.test.presentation.textOrGone
 
 class AutoSuggestAdapter(context: Context, private val resource: Int) :
-    ArrayAdapter<City>(context, resource), Filterable {
-    val dataList: MutableList<City>
+    ArrayAdapter<CityViewModel>(context, resource), Filterable {
+    val dataList: MutableList<CityViewModel>
 
     init {
         dataList = ArrayList()
     }
 
-    fun setData(response: List<City>) {
+    fun setData(response: List<CityViewModel>) {
         dataList.apply {
             clear()
             addAll(response)
@@ -33,7 +34,7 @@ class AutoSuggestAdapter(context: Context, private val resource: Int) :
     }
 
     @Nullable
-    override fun getItem(position: Int): City {
+    override fun getItem(position: Int): CityViewModel {
         return dataList[position]
     }
 

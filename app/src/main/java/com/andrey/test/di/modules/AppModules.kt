@@ -11,8 +11,8 @@ import com.andrey.test.data.repository.CityRepositoryImpl
 import com.andrey.test.di.ViewModelFactory
 import com.andrey.test.domain.CityInteractor
 import com.andrey.test.domain.CityInteractorImpl
-import com.andrey.test.domain.NetworkConnectivityManager
-import com.andrey.test.domain.NetworkConnectivityManagerImpl
+import com.andrey.test.presentation.network.NetworkConnectivityManager
+import com.andrey.test.presentation.network.NetworkConnectivityManagerImpl
 import com.google.gson.Gson
 import toothpick.config.Module
 import toothpick.ktp.binding.bind

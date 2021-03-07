@@ -1,4 +1,4 @@
-package com.andrey.test.domain
+package com.andrey.test.presentation.animation
 
 import android.animation.ObjectAnimator
 import android.animation.TypeEvaluator

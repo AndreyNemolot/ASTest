@@ -2,9 +2,11 @@ package com.andrey.test.presentation.searchScreen
 
 import androidx.lifecycle.*
 import com.andrey.test.domain.CityInteractor
-import com.andrey.test.domain.NetworkConnectivityManager
 import com.andrey.test.domain.model.City
 import com.andrey.test.domain.model.Direction
+import com.andrey.test.presentation.model.CityViewModel
+import com.andrey.test.presentation.network.NetworkConnectivityManager
+import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -42,7 +44,8 @@ class SearchViewModel @Inject constructor(
             return
         }
         try {
-            val cityList = cityInteractor.getCityList(searchString, LANG)
+            val cityList =
+                cityInteractor.getCityList(searchString, LANG).map { it.toCityViewModel() }
             updateViewState {
                 when (direction) {
                     Direction.FROM -> {
@@ -64,11 +67,11 @@ class SearchViewModel @Inject constructor(
         _stateFlow.tryEmit(state)
     }
 
-    fun saveChosenCityFrom(city: City) {
+    fun saveChosenCityFrom(city: CityViewModel) {
         state = state.copy(cityFrom = city)
     }
 
-    fun saveChosenCityTo(city: City) {
+    fun saveChosenCityTo(city: CityViewModel) {
         state = state.copy(cityTo = city)
     }
 
@@ -108,9 +111,9 @@ class SearchViewModel @Inject constructor(
         }
     }
 
-    private suspend fun getCity(cityName: String): City? {
+    private suspend fun getCity(cityName: String): CityViewModel? {
         return try {
-            cityInteractor.getFirstSuitableCity(cityName, LANG)
+            cityInteractor.getFirstSuitableCity(cityName, LANG)?.toCityViewModel()
         } catch (e: Exception) {
             if (e is IOException) {
                 _commandFlow.emit(Command.OnInternetUnailable)
@@ -121,6 +124,15 @@ class SearchViewModel @Inject constructor(
 
     fun changeDirection() {
         state = state.copy(cityFrom = state.cityTo, cityTo = state.cityFrom)
+    }
+
+    private fun City.toCityViewModel(): CityViewModel {
+        return CityViewModel(
+            latinFullName = latinFullName,
+            location = LatLng(location.lat, location.lon),
+            latinCityName = latinCityName,
+            nearestAirport = nearestAirport
+        )
     }
 
     companion object {

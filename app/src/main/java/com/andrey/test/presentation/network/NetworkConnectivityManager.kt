@@ -1,4 +1,4 @@
-package com.andrey.test.domain
+package com.andrey.test.presentation.network
 
 import kotlinx.coroutines.flow.Flow
 
